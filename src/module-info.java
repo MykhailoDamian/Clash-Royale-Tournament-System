@@ -1,0 +1,9 @@
+/**
+ * 
+ */
+/**
+ * @author mikedamian
+ *
+ */
+module ClashRoyaleSystem {
+}

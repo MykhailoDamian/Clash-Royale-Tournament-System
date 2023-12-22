@@ -21,20 +21,51 @@ public class Competitor {
     // Getters and setters for all attributes
     // ...
 
-    // Method to get overall score
-    public double getOverallScore() {
-        return 5; // Static value for now
+    // Method to get the array of scores
+    public int[] getScoreArray() {
+        return scores;
     }
 
-    // Method to get full details
+    // Method to calculate and get overall score
+    public double getOverallScore() {
+        double weightedSum = 0;
+        int weightSum = 0;
+        for (int i = 0; i < scores.length; i++) {
+            int weight = getWeightForLevel(i);
+            weightedSum += scores[i] * weight;
+            weightSum += weight;
+        }
+        return weightedSum / weightSum;
+    }
+
+    // Method to determine weight based on level
+    private int getWeightForLevel(int scoreIndex) {
+        // Example: Different weights based on the level
+        if (level.equalsIgnoreCase("Novice")) {
+            return 1; // Equal weight for all scores for Novice level
+        } else if (level.equalsIgnoreCase("Expert")) {
+            // Higher weight for later scores for Expert level
+            return scoreIndex + 1;
+        } else {
+            return 1; // Default weight
+        }
+    }
+
+    // Method to get full details including scores
     public String getFullDetails() {
-        return "Competitor number " + competitorNumber + ", name " + name + ", country " + country + ".\n" +
-               name + " is a " + level + " aged " + age + " and has an overall score of " + getOverallScore() + ".";
+        StringBuilder details = new StringBuilder();
+        details.append("Competitor number ").append(competitorNumber).append(", name ").append(name).append(", country ").append(country).append(".\n");
+        details.append(name).append(" is a ").append(level).append(" aged ").append(age).append(" and received these scores: ");
+        for (int score : scores) {
+            details.append(score).append(" ");
+        }
+        details.append("\nThis gives him an overall score of ").append(String.format("%.1f", getOverallScore())).append(".");
+        return details.toString();
     }
 
     // Method to get short details
     public String getShortDetails() {
-        return "CN " + competitorNumber + " (" + getInitials(name) + ") has overall score " + getOverallScore() + ".";
+        return "CN " + competitorNumber + " (" + getInitials(name) + ") has overall score " + String.format("%.1f", getOverallScore()) + ".";
     }
 
     // Helper method to get initials from name

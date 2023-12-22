@@ -18,8 +18,9 @@ public class Competitor {
         this.scores = scores;
     }
 
-    // Getters and setters for all attributes
-    // ...
+    public int getCompetitorNumber() {
+        return competitorNumber;
+    }
 
     // Method to get the array of scores
     public int[] getScoreArray() {

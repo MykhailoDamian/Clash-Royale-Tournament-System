@@ -6,4 +6,5 @@
  *
  */
 module ClashRoyaleSystem {
+	requires java.desktop;
 }

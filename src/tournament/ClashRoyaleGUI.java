@@ -128,9 +128,21 @@ public class ClashRoyaleGUI {
 
     private void showPlayerScreen(Player player) {
         JPanel playerPanel = new JPanel();
+        playerPanel.setLayout(null);
         frame.getContentPane().removeAll();
         frame.getContentPane().add(playerPanel);
-        playerPanel.setLayout(null);
+
+        // Default profile picture centered at the top
+        ImageIcon profilePicIcon = new ImageIcon("PlayerPicture.png"); // Replace with your image path
+        JLabel profilePicLabel = new JLabel(profilePicIcon);
+        profilePicLabel.setBounds((frame.getWidth() - 60) / 2, 10, 60, 60); // Center the profile picture
+        playerPanel.add(profilePicLabel);
+
+        // Welcome message centered below the profile picture
+        JLabel welcomeLabel = new JLabel("Welcome, " + player.getName() + "!");
+        welcomeLabel.setBounds((frame.getWidth() - 200) / 2, 80, 200, 20); // Adjust the size as needed
+        welcomeLabel.setHorizontalAlignment(JLabel.CENTER);
+        playerPanel.add(welcomeLabel);
 
         // Initialize the score table with the model and override the prepareRenderer method
         scoreTable = new JTable(new DefaultTableModel(new Object[]{"MatchID", "Score", "Result"}, 0)) {
@@ -159,23 +171,34 @@ public class ClashRoyaleGUI {
 
         // Set the table in a scroll pane and add it to the player panel
         scrollPane = new JScrollPane(scoreTable);
-        scrollPane.setBounds(10, 10, 760, 300); // Adjust the size and position as needed
+        scrollPane.setBounds(10, 110, 760, 200); // Adjusted y position to prevent overlap
         playerPanel.add(scrollPane);
+        // Player details displayed using labels for better formatting
+        int yPos = 320; // Adjusted y position to start after the score table
+        String[] details = {
+            "Player ID: " + player.getUserID(),
+            "Name: " + player.getName(),
+            "Age: " + player.getAge(),
+            "Country: " + player.getCountry(),
+            "Email: " + player.getEmail(),
+            "Average Score: " + String.format("%.1f", player.getOverallScore())
+        };
 
-        // Display other player details below the score table
-        JTextArea detailsArea = new JTextArea();
-        detailsArea.setBounds(10, 320, 760, 100); // Adjusted to fit below the table
-        detailsArea.setEditable(false);
-        detailsArea.setText(player.getFullDetails());
-        playerPanel.add(detailsArea);
+        for (String detail : details) {
+            JLabel detailLabel = new JLabel(detail);
+            detailLabel.setBounds(10, yPos, 300, 20); // Set bounds as needed
+            playerPanel.add(detailLabel);
+            yPos += 25; // Increment y position for the next label
+        }
 
+        // Logout button centered at the bottom
         JButton logoutButton = new JButton("Logout");
-        logoutButton.setBounds(10, 430, 100, 25); // Ensure this position is visible
+        logoutButton.setBounds((frame.getWidth() - 100) / 2, yPos + 20, 100, 25); // Adjust yPos as needed
         playerPanel.add(logoutButton);
         logoutButton.addActionListener(e -> logout()); // Add an action listener to call the logout method
 
-
         // Refresh the frame to display the updated panel
+        frame.setSize(800, 600); // Set the frame size to accommodate all components
         frame.revalidate();
         frame.repaint();
     }
@@ -236,15 +259,9 @@ public class ClashRoyaleGUI {
         // ...
     }
 
-    private void addLogoutButton(JPanel panel) {
-        JButton logoutButton = new JButton("Logout");
-        logoutButton.setBounds(10, 350, 80, 25); // Position the logout button as required
-        panel.add(logoutButton);
-        logoutButton.addActionListener(e -> logout()); // Use lambda expression to call logout
-    }
 
     private Player fetchPlayerDetails(String userID) {
-        String filePath = "RunCompetitor.csv"; // Update with actual path
+        String filePath = "RunCompetitor.csv"; // Path to your CSV file
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -254,9 +271,12 @@ public class ClashRoyaleGUI {
                     int age = Integer.parseInt(values[2]);
                     String country = values[3];
                     String email = values[4];
+                    
+                    // Assuming scores are stored in the 6th column and are space-separated
                     int[] scores = Arrays.stream(values[5].split(" "))
                                          .mapToInt(Integer::parseInt)
                                          .toArray();
+                    
                     return new Player(userID, name, age, country, email, scores);
                 }
             }
@@ -265,6 +285,7 @@ public class ClashRoyaleGUI {
         }
         return null;
     }
+
 
     public static void main(String[] args) {
         new ClashRoyaleGUI();

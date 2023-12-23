@@ -35,15 +35,15 @@ public class Player {
             Match match = matchOutcomes.get(matchID);
 
             if (match != null) {
-                // Apply weighing logic based on match outcome
-                if ("Win".equals(match.getResult()) && scores[i] < 3) {
-                    total += 3; // Add weight for a win, adjusting score to 3
+                // Apply the new weighing logic
+                if (scores[i] == 1 || scores[i] == 2) {
+                    total += "Win".equals(match.getResult()) ? 3 : scores[i];
                 } else {
-                    total += scores[i]; // Use actual score if not a win or no additional weight needed
+                    total += scores[i];
                 }
             }
         }
-        return scores.length > 0 ? total / scores.length : 0; // Average score, or adjust as needed
+        return scores.length > 0 ? total / scores.length : 0; // Average score
     }
 
     // Getters and Setters
@@ -95,7 +95,7 @@ public class Player {
         this.scores = scores;
     }
 
- // Method to return full details of the player
+    // Method to return full details of the player
     public String getFullDetails() {
         StringBuilder sb = new StringBuilder();
         sb.append("Player ID: ").append(userID)

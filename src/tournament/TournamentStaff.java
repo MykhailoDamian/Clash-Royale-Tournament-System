@@ -94,7 +94,7 @@ public class TournamentStaff {
                 int score = Integer.parseInt(parts[2].trim());
                 String result = parts[3].trim();
 
-                Match match = new Match(matchID, userID, score, result);
+                Match match = new Match(matchID,userID,score,result);
 
                 Player player = playerList.findPlayer(userID);
                 if (player != null) {

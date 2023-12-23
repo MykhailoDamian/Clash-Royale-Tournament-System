@@ -7,7 +7,9 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -300,9 +302,204 @@ public class ClashRoyaleGUI {
 
 
     private void showTournamentStaffScreen() {
-        // Implement staff screen layout and functionality
-        // ...
+        JPanel staffPanel = new JPanel();
+        staffPanel.setLayout(null);
+        frame.getContentPane().removeAll();
+        frame.getContentPane().add(staffPanel);
+
+        // Default profile picture
+        ImageIcon profilePicIcon = new ImageIcon("StaffPicture.png"); // Replace with your image path
+        JLabel profilePicLabel = new JLabel(profilePicIcon);
+        profilePicLabel.setBounds((frame.getWidth() - 60) / 2, 10, 60, 60); // Adjust as needed
+        staffPanel.add(profilePicLabel);
+
+        // Welcome message
+        JLabel welcomeLabel = new JLabel("Welcome, Tournament Staff!");
+        welcomeLabel.setBounds((frame.getWidth() - 200) / 2, 80, 200, 20); // Adjust as needed
+        welcomeLabel.setHorizontalAlignment(JLabel.CENTER);
+        staffPanel.add(welcomeLabel);
+        
+        addCreateMatchSection(staffPanel);
+        
+        JLabel titleLabel = new JLabel("Create Match");
+        titleLabel.setBounds(10, 100, 100, 25);
+        staffPanel.add(titleLabel);
+
+        // Dropdowns for Player 1 and Player 2
+        JComboBox<String> player1Dropdown = new JComboBox<>(getPlayerIDs());
+        JComboBox<String> player2Dropdown = new JComboBox<>(getPlayerIDs());
+        player1Dropdown.setBounds(10, 130, 100, 25);
+        player2Dropdown.setBounds(120, 130, 100, 25);
+        staffPanel.add(player1Dropdown);
+        staffPanel.add(player2Dropdown);
+
+        // Points input fields for Player 1 and Player 2
+        JTextField points1Field = new JTextField();
+        JTextField points2Field = new JTextField();
+        points1Field.setBounds(230, 130, 50, 25);
+        points2Field.setBounds(290, 130, 50, 25);
+        staffPanel.add(points1Field);
+        staffPanel.add(points2Field);
+
+        // Dropdown for Result
+        JComboBox<String> resultDropdown = new JComboBox<>(new String[] {"Player 1 Win", "Player 2 Win"});
+        resultDropdown.setBounds(350, 130, 100, 25);
+        staffPanel.add(resultDropdown);
+
+        // Add Match button
+        JButton addMatchButton = new JButton("Add Match");
+        addMatchButton.setBounds(460, 130, 100, 25);
+        staffPanel.add(addMatchButton);
+        addMatchButton.addActionListener(e -> addMatch(player1Dropdown, player2Dropdown, points1Field, points2Field, resultDropdown));
+
+        // Logout button
+        JButton logoutButton = new JButton("Logout");
+        logoutButton.setBounds((frame.getWidth() - 100) / 2, 550, 100, 25); // Adjust as needed
+        staffPanel.add(logoutButton);
+        logoutButton.addActionListener(e -> logout());
+
+        frame.revalidate();
+        frame.repaint();
     }
+    private void addCreateMatchSection(JPanel panel) {
+        JLabel titleLabel = new JLabel("Create Match");
+        titleLabel.setBounds(10, 100, 100, 25);
+        panel.add(titleLabel);
+
+        JComboBox<String> player1Dropdown = new JComboBox<>(getPlayerIDs());
+        JComboBox<String> player2Dropdown = new JComboBox<>(getPlayerIDs());
+        JTextField points1Field = new JTextField();
+        JTextField points2Field = new JTextField();
+        JComboBox<String> resultDropdown = new JComboBox<>(new String[]{"Player 1 Win", "Player 2 Win"});
+
+        player1Dropdown.setBounds(10, 130, 100, 25);
+        player2Dropdown.setBounds(120, 130, 100, 25);
+        points1Field.setBounds(230, 130, 50, 25);
+        points2Field.setBounds(290, 130, 50, 25);
+        resultDropdown.setBounds(350, 130, 100, 25);
+
+        JButton addMatchButton = new JButton("Add Match");
+        addMatchButton.setBounds(460, 130, 100, 25);
+        addMatchButton.addActionListener(e -> addMatch(player1Dropdown, player2Dropdown, points1Field, points2Field, resultDropdown));
+
+        panel.add(player1Dropdown);
+        panel.add(player2Dropdown);
+        panel.add(points1Field);
+        panel.add(points2Field);
+        panel.add(resultDropdown);
+        panel.add(addMatchButton);
+    }
+    private String[] getPlayerIDs() {
+        List<String> playerIDs = new ArrayList<>();
+        String filePath = "RunCompetitor.csv";
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                playerIDs.add(values[0]); // Assuming the first column is the player ID
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return playerIDs.toArray(new String[0]);
+    }
+
+
+    private void addMatch(JComboBox<String> player1Dropdown, JComboBox<String> player2Dropdown, JTextField points1Field, JTextField points2Field, JComboBox<String> resultDropdown) {
+        String player1ID = (String) player1Dropdown.getSelectedItem();
+        String player2ID = (String) player2Dropdown.getSelectedItem();
+        if (player1ID.equals(player2ID)) {
+            JOptionPane.showMessageDialog(frame, "Players must be different.");
+            return;
+        }
+
+        int points1, points2;
+        try {
+            points1 = Integer.parseInt(points1Field.getText());
+            points2 = Integer.parseInt(points2Field.getText());
+            if (points1 < 0 || points1 > 3 || points2 < 0 || points2 > 3 || (points1 == 3 && points2 == 3)) {
+                throw new IllegalArgumentException();
+            }
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(frame, "Invalid points. Please enter numbers from 0 to 3.");
+            return;
+        }
+
+        String result = (String) resultDropdown.getSelectedItem();
+        String winnerID = result.equals("Player 1 Win") ? player1ID : player2ID;
+        updateMatchCsv(player1ID, player2ID, points1, points2, winnerID);
+        updateRunCompetitorCsv(player1ID, player2ID, points1, points2);
+    }
+
+    private void updateMatchCsv(String player1ID, String player2ID, int points1, int points2, String winnerID) {
+        String filePath = "Match.csv";
+        try (FileWriter fw = new FileWriter(filePath, true); 
+             BufferedWriter bw = new BufferedWriter(fw)) {
+
+            String player1Result = player1ID.equals(winnerID) ? "Win" : "Loss";
+            String player2Result = player2ID.equals(winnerID) ? "Win" : "Loss";
+
+            int player1MatchNumber = getPlayerMatchNumber(player1ID) + 1;
+            int player2MatchNumber = getPlayerMatchNumber(player2ID) + 1;
+
+            String player1Record = String.format("%s_%02d,%s,%d,%s\n", player1ID, player1MatchNumber, player1ID, points1, player1Result);
+            String player2Record = String.format("%s_%02d,%s,%d,%s\n", player2ID, player2MatchNumber, player2ID, points2, player2Result);
+
+            bw.write(player1Record);
+            bw.write(player2Record);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int getPlayerMatchNumber(String playerID) {
+        String filePath = "Match.csv";
+        int matchCount = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.startsWith(playerID)) {
+                    matchCount++;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return matchCount;
+    }
+
+    private void updateRunCompetitorCsv(String player1ID, String player2ID, int points1, int points2) {
+        String filePath = "RunCompetitor.csv";
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.startsWith(player1ID)) {
+                    line = appendNewScore(line, points1);
+                } else if (line.startsWith(player2ID)) {
+                    line = appendNewScore(line, points2);
+                }
+                lines.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath))) {
+            for (String line : lines) {
+                bw.write(line);
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String appendNewScore(String line, int newScore) {
+        return line + "," + newScore;
+    }
+
 
     public static void main(String[] args) {
         new ClashRoyaleGUI();

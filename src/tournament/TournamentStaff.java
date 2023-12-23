@@ -3,38 +3,76 @@ package tournament;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class TournamentStaff {
     public static void main(String[] args) {
-        CompetitorList competitorList = new CompetitorList();
-        loadCompetitorsFromFile(competitorList, "RunCompetitor.csv");
+        PlayerList playerList = new PlayerList();
+        loadPlayersFromFile(playerList, "RunCompetitor.csv");
+        loadMatchesFromFile(playerList, "Matches.csv");
 
-        // Display reports
-        System.out.println("Full Details Report:\n" + competitorList.generateFullDetailsReport());
-        System.out.println("Top Competitor:\n" + competitorList.findTopCompetitor());
-        System.out.println("Frequency Report:\n" + competitorList.generateFrequencyReport());
-
-        // User interaction
         Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter Competitor Number: ");
-        int number = scanner.nextInt();
-        Competitor competitor = competitorList.findCompetitor(number);
-        if (competitor != null) {
-            System.out.println("Competitor Found: " + competitor.getFullDetails());
-        } else {
-            System.out.println("Competitor not found.");
+        while (true) {
+            System.out.println("\nSelect an option:");
+            System.out.println("1. Show All Players");
+            System.out.println("2. Show Top Player");
+            System.out.println("3. Search Player by ID");
+            System.out.println("4. Exit");
+            System.out.print("Enter choice: ");
+            int choice = scanner.nextInt();
+
+            switch (choice) {
+                case 1:
+                    System.out.println("\nFull Details Report:\n" + playerList.generateFullDetailsReport());
+                    break;
+                case 2:
+                    Player topPlayer = playerList.findTopPlayer();
+                    if (topPlayer != null) {
+                        System.out.println("\nTop Player:\n" + topPlayer.getFullDetails());
+                    } else {
+                        System.out.println("No players available.");
+                    }
+                    break;
+                case 3:
+                    System.out.print("\nEnter Player ID: ");
+                    scanner.nextLine(); // Consume the newline
+                    String userID = scanner.nextLine();
+                    Player player = playerList.findPlayer(userID);
+                    if (player != null) {
+                        System.out.println("\nPlayer Found:\n" + player.getFullDetails());
+                    } else {
+                        System.out.println("Player not found.");
+                    }
+                    break;
+                case 4:
+                    System.out.println("Exiting...");
+                    scanner.close();
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
         }
     }
 
-    private static void loadCompetitorsFromFile(CompetitorList competitorList, String filename) {
+    private static void loadPlayersFromFile(PlayerList playerList, String filename) {
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
             while ((line = br.readLine()) != null) {
-                Competitor competitor = parseCompetitor(line);
-                if (competitor != null) {
-                    competitorList.addCompetitor(competitor);
+                String[] parts = line.split(",");
+                if (parts.length < 6) {
+                    System.out.println("Invalid data format: " + line);
+                    continue;
                 }
+                String userID = parts[0].trim();
+                String name = parts[1].trim();
+                int age = Integer.parseInt(parts[2].trim());
+                String country = parts[3].trim();
+                String email = parts[4].trim();
+                int[] scores = Arrays.stream(parts[5].split(" "))
+                                     .mapToInt(Integer::parseInt)
+                                     .toArray();
+                playerList.addPlayer(new Player(userID, name, age, country, email, scores));
             }
         } catch (IOException e) {
             System.out.println("Error reading file: " + filename);
@@ -42,39 +80,30 @@ public class TournamentStaff {
         }
     }
 
-    private static Competitor parseCompetitor(String line) {
-        String[] parts = line.split(",");
-        if (parts.length < 9) {
-            System.out.println("Invalid data format: " + line);
-            return null;
-        }
-        try {
-            int number = Integer.parseInt(parts[0].trim());
-            String name = parts[1].trim();
-            String country = parts[4].trim();
-            int[] scores = new int[parts.length - 5];
-            for (int i = 5; i < parts.length; i++) {
-                scores[i - 5] = Integer.parseInt(parts[i].trim());
-            }
-            // Determine the type of competitor (Novice/Expert) and create an instance
-            // This example assumes the type is determined by some logic or data in the file
-            // Replace this logic with your actual criteria for determining the type
-            if (isNovice(parts)) {
-                return new NoviceCompetitor(number, name, country, scores);
-            } else {
-                return new ExpertCompetitor(number, name, country, scores);
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid number format in line: " + line);
-            return null;
-        }
-    }
+    private static void loadMatchesFromFile(PlayerList playerList, String filename) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length < 4) {
+                    System.out.println("Invalid match data format: " + line);
+                    continue;
+                }
+                String matchID = parts[0].trim();
+                String userID = parts[1].trim();
+                int score = Integer.parseInt(parts[2].trim());
+                String result = parts[3].trim();
 
-    private static boolean isNovice(String[] parts) {
-        // Implement the logic to determine if the competitor is a novice
-        // Example: based on age or a specific field in the data
-        // ...
-        return true; // Placeholder, replace with actual logic
+                Match match = new Match(matchID, userID, score, result);
+
+                Player player = playerList.findPlayer(userID);
+                if (player != null) {
+                    player.addMatchOutcome(matchID, match);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + filename);
+            e.printStackTrace();
+        }
     }
 }
-

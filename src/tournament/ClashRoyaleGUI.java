@@ -2,19 +2,25 @@ package tournament;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Arrays;
+
 
 public class ClashRoyaleGUI {
     private JFrame frame;
     private JTextField userIDField;
     private JPasswordField passwordField;
     private JButton loginButton;
+    private String loggedInUserID; // To store the logged-in user's ID
+
 
     public ClashRoyaleGUI() {
         // Initialize the main application frame
         frame = new JFrame("Clash Royale Tournament System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400, 300);
+        frame.setSize(600, 400); // Increased window size
 
         // Show login panel initially
         showLoginPanel();
@@ -55,39 +61,46 @@ public class ClashRoyaleGUI {
         loginButton = new JButton("Login");
         loginButton.setBounds(10, 80, 80, 25);
         panel.add(loginButton);
-
-        loginButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                performLogin();
-            }
-        });
+        loginButton.addActionListener(this::performLogin);
     }
 
-    private void performLogin() {
-        String userID = userIDField.getText();
-        String password = new String(passwordField.getPassword());
+    private void performLogin(ActionEvent e) {
+        String userID = userIDField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
 
         Authentication auth = new Authentication(userID, password);
         if (auth.login()) {
-            if (auth.verifyCredentials().equals("Player")) {
-                showPlayerScreen();
-            } else {
+            loggedInUserID = userID; // Store the logged-in user ID
+            String userRole = auth.verifyCredentials();
+            if ("Player".equals(userRole)) {
+                Player player = fetchPlayerDetails(loggedInUserID);
+                if (player != null) {
+                    showPlayerScreen(player);
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Player details not found.");
+                }
+            } else if ("TournamentStaff".equals(userRole)) {
                 showTournamentStaffScreen();
+            } else {
+                JOptionPane.showMessageDialog(frame, "Invalid user role");
             }
         } else {
             JOptionPane.showMessageDialog(frame, "Invalid credentials");
         }
     }
 
-    private void showPlayerScreen() {
+    private void showPlayerScreen(Player player) {
         JPanel playerPanel = new JPanel();
         frame.getContentPane().removeAll();
         frame.getContentPane().add(playerPanel);
         playerPanel.setLayout(null);
 
-        JLabel label = new JLabel("Player Interface");
-        label.setBounds(10, 10, 160, 25);
-        playerPanel.add(label);
+        // Display player details in a text area
+        JTextArea detailsArea = new JTextArea();
+        detailsArea.setBounds(10, 10, 580, 340);
+        detailsArea.setEditable(false);
+        detailsArea.setText(player.getFullDetails());
+        playerPanel.add(detailsArea);
 
         addLogoutButton(playerPanel);
         frame.revalidate();
@@ -95,31 +108,38 @@ public class ClashRoyaleGUI {
     }
 
     private void showTournamentStaffScreen() {
-        JPanel staffPanel = new JPanel();
-        frame.getContentPane().removeAll();
-        frame.getContentPane().add(staffPanel);
-        staffPanel.setLayout(null);
-
-        JLabel label = new JLabel("Tournament Staff Interface");
-        label.setBounds(10, 10, 200, 25);
-        staffPanel.add(label);
-
-        addLogoutButton(staffPanel);
-        frame.revalidate();
-        frame.repaint();
+        // Implement the staff screen layout and functionality
+        // ...
     }
 
     private void addLogoutButton(JPanel panel) {
         JButton logoutButton = new JButton("Logout");
-        logoutButton.setBounds(10, 50, 80, 25);
+        logoutButton.setBounds(10, 350, 80, 25);
         panel.add(logoutButton);
+        logoutButton.addActionListener(e -> showLoginPanel());
+    }
 
-        logoutButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                Authentication.logout();
-                showLoginPanel();
+    private Player fetchPlayerDetails(String userID) {
+        String filePath = "RunCompetitor.csv"; // Update with actual path
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                if (values[0].equals(userID)) {
+                    String name = values[1];
+                    int age = Integer.parseInt(values[2]);
+                    String country = values[3];
+                    String email = values[4];
+                    int[] scores = Arrays.stream(values[5].split(" "))
+                                         .mapToInt(Integer::parseInt)
+                                         .toArray();
+                    return new Player(userID, name, age, country, email, scores);
+                }
             }
-        });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static void main(String[] args) {

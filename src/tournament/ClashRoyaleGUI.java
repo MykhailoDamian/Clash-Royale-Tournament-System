@@ -165,6 +165,9 @@ public class ClashRoyaleGUI {
 
     private void displayPlayerDetails(JPanel playerPanel, Player player) {
         int yPos = 320;
+        String totalScoreString = String.valueOf(player.getTotalScore());
+        String totalScoreWithWeightingString = String.valueOf(player.getTotalScoreWithWeighting());
+        String averageScoreString = String.format("%.1f", player.getOverallScore());
 
         String scoresString = Arrays.stream(player.getScores())
                 .mapToObj(String::valueOf)
@@ -176,17 +179,24 @@ public class ClashRoyaleGUI {
                 "Age: " + player.getAge(),
                 "Country: " + player.getCountry(),
                 "Email: " + player.getEmail(),
-                "Scores: " + scoresString,
-                "Average Score: " + String.format("%.1f", player.getOverallScore())
+                "Total Score: " + totalScoreString,
+                "Total Score With Weighting: " + totalScoreWithWeightingString,
+                "Average Score: " + averageScoreString
         };
 
         for (String detail : details) {
             JLabel detailLabel = new JLabel(detail);
             detailLabel.setBounds(10, yPos, 300, 20);
+            if (detail.startsWith("Total Score") || detail.startsWith("Total Score With Weighting")) {
+                detailLabel.setFont(new Font("Arial", Font.BOLD, 14)); // Make text bold
+            }
+            if (detail.startsWith("Average Score")) {
+                detailLabel.setFont(new Font("Arial", Font.BOLD, 14)); // Highlight the average score
+                detailLabel.setForeground(Color.RED); // Change color to highlight
+            }
             playerPanel.add(detailLabel);
             yPos += 25;
         }
-        System.out.println("Average Score for " + player.getName() + ": " + player.getOverallScore());
 
     }
 

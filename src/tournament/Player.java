@@ -1,5 +1,6 @@
 package tournament;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +22,25 @@ public class Player {
         this.scores = scores;
         this.matchOutcomes = new HashMap<>();
     }
+    public int getTotalScore() {
+        return Arrays.stream(scores).sum();
+    }
+    public int getTotalScoreWithWeighting() {
+        int total = 0;
+        for (int i = 0; i < scores.length; i++) {
+            String matchID = String.format("%s_%02d", userID, i + 1);
+            Match match = matchOutcomes.get(matchID);
 
+            if (match != null) {
+                if (scores[i] == 1 || scores[i] == 2) {
+                    total += "Win".equals(match.getResult()) ? 3 : scores[i];
+                } else {
+                    total += scores[i];
+                }
+            }
+        }
+        return total;
+    }
     // Add a match outcome to the player
     public void addMatchOutcome(String matchID, Match match) {
         this.matchOutcomes.put(matchID, match);

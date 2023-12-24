@@ -14,7 +14,6 @@ public class Match {
         this.result = result;
     }
 
-    // Getters and setters for each field
     public String getMatchID() {
         return matchID;
     }
@@ -47,5 +46,4 @@ public class Match {
         this.result = result;
     }
 
-    // Additional methods or logic can be added as needed
 }

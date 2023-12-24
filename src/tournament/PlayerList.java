@@ -49,6 +49,4 @@ public class PlayerList {
         return "Frequency Report: Not Implemented Yet";
     }
 
-    // Additional methods for other statistics (average, min, max, etc.)
-    // ...
 }

@@ -380,7 +380,21 @@ public class ClashRoyaleGUI {
         mostWinsReportButton.addActionListener(e -> displayReport("Report Sorted by Most Wins", generateReportSortedByMostWins()));
         staffPanel.add(mostWinsReportButton);
 
-        
+        JButton averageScoreReportButton = new JButton("Generate Report Sorted by Average Score");
+        averageScoreReportButton.setBounds(370, 350, 300, 25);
+        averageScoreReportButton.addActionListener(e -> displayReport("Report Sorted by Average Score", generateReportSortedByAverageScore()));
+        staffPanel.add(averageScoreReportButton);
+
+        JButton weightedScoreReportButton = new JButton("Generate Report Sorted By Weighted Score");
+        weightedScoreReportButton.setBounds(370, 380, 300, 25);
+        weightedScoreReportButton.addActionListener(e -> displayReport("Report Sorted By Weighted Score", generateReportSortedByWeightedScore()));
+        staffPanel.add(weightedScoreReportButton);
+
+        JButton amountOfMatchesReportButton = new JButton("Generate Report Sorted By Amount of Matches");
+        amountOfMatchesReportButton.setBounds(370, 410, 300, 25);
+        amountOfMatchesReportButton.addActionListener(e -> displayReport("Report Sorted By Amount of Matches", generateReportSortedByAmountOfMatches()));
+        staffPanel.add(amountOfMatchesReportButton);
+
         // Logout button
         JButton logoutButton = new JButton("Logout");
         logoutButton.setBounds((frame.getWidth() - 100) / 2, 550, 100, 25); // Adjust as needed
@@ -604,11 +618,11 @@ public class ClashRoyaleGUI {
 
 
     private void showSelectedPlayerDetails(String selectedPlayerID) {
-    	
         Player selectedPlayer = fetchPlayerDetails(selectedPlayerID);
-
         if (selectedPlayer != null) {
-        	System.out.println("Match Outcomes for " + selectedPlayerID + ": " + selectedPlayer.getMatchOutcomes());
+            // Adding match outcomes to the player
+            addMatchOutcomesToPlayer(selectedPlayer);
+
 
             // Clearing the frame and setting up a new panel for player details
             JPanel playerDetailsPanel = new JPanel();
@@ -637,6 +651,8 @@ public class ClashRoyaleGUI {
             JOptionPane.showMessageDialog(frame, "Player details not found.");
         }
     }
+
+
     
 
 	private int calculatePositionForMatchTable() {
@@ -681,6 +697,10 @@ public class ClashRoyaleGUI {
 	                                 .toArray();
 
 	            Player player = new Player(userID, name, age, country, email, scores);
+	            
+	            // Add match outcomes for each player
+	            addMatchOutcomesToPlayer(player);
+
 	            players.add(player);
 	        }
 	    } catch (IOException e) {
@@ -688,12 +708,49 @@ public class ClashRoyaleGUI {
 	    }
 	    return players;
 	}
+
 	// Method to generate a detailed report
 	private String generateDetailedReport() {
 	    List<Player> players = getAllPlayers();
 	    StringBuilder report = new StringBuilder();
+
+	    // Adding a header for the report
+	    report.append("Player ID\tName\tAge\tCountry\tEmail\tTotal Points\tTotal Matches\tWins\tAverage Points\n");
+
 	    for (Player player : players) {
-	        report.append(player.getFullDetails()).append("\n");
+	        int totalMatches = player.getMatchOutcomes().size();
+	        int wins = countWins(player);
+	        int totalPoints = player.getTotalScore();
+	        double averagePoints = totalMatches > 0 ? (double) totalPoints / totalMatches : 0.0;
+
+	        report.append(player.getUserID())
+	              .append("\t").append(player.getName())
+	              .append("\t").append(player.getAge())
+	              .append("\t").append(player.getCountry())
+	              .append("\t").append(player.getEmail())
+	              .append("\t").append(totalPoints)
+	              .append("\t").append(totalMatches)
+	              .append("\t").append(wins)
+	              .append("\t").append(String.format("%.1f", averagePoints)).append("\n");
+	    }
+	    return report.toString();
+	}
+
+	// Method to generate report sorted by average score
+	private String generateReportSortedByAverageScore() {
+	    List<Player> players = getAllPlayers();
+	    players.sort((p1, p2) -> Double.compare(p2.getOverallScore(), p1.getOverallScore()));
+	    StringBuilder report = new StringBuilder();
+
+	    // Header
+	    report.append("Player ID\tName\tAverage Score\n");
+
+	    // Data rows
+	    for (Player player : players) {
+	        double averageScore = player.getOverallScore();
+	        report.append(player.getUserID()).append("\t")
+	              .append(player.getName()).append("\t")
+	              .append(String.format("%.1f", averageScore)).append("\n");
 	    }
 	    return report.toString();
 	}
@@ -701,21 +758,41 @@ public class ClashRoyaleGUI {
 	// Method to generate report sorted by total points
 	private String generateReportSortedByTotalPoints() {
 	    List<Player> players = getAllPlayers();
+	    // Sort players by their total score
 	    players.sort((p1, p2) -> Integer.compare(p2.getTotalScore(), p1.getTotalScore()));
+
 	    StringBuilder report = new StringBuilder();
+	    report.append("Player ID\tName\tTotal Points\n"); // Header for the report
 	    for (Player player : players) {
-	        report.append(player.getFullDetails()).append("\n");
+	        // Appending only the ID, name, and total score of each player
+	        report.append(player.getUserID())
+	              .append("\t")
+	              .append(player.getName())
+	              .append("\t")
+	              .append(player.getTotalScore())
+	              .append("\n");
 	    }
 	    return report.toString();
 	}
+
 
 	// Method to generate report sorted by most wins
 	private String generateReportSortedByMostWins() {
 	    List<Player> players = getAllPlayers();
 	    players.sort((p1, p2) -> Integer.compare(countWins(p2), countWins(p1)));
 	    StringBuilder report = new StringBuilder();
+
+	    // Adding a header for the report
+	    report.append("Player ID\tName\tTotal Matches\tWins\n");
+
 	    for (Player player : players) {
-	        report.append(player.getFullDetails()).append("\n");
+	        int totalMatches = player.getMatchOutcomes().size();
+	        int wins = countWins(player);
+
+	        report.append(player.getUserID())
+	              .append("\t").append(player.getName())
+	              .append("\t").append(totalMatches)
+	              .append("\t").append(wins).append("\n");
 	    }
 	    return report.toString();
 	}
@@ -730,18 +807,59 @@ public class ClashRoyaleGUI {
 	    return wins;
 	}
 
+
+	private String generateReportSortedByWeightedScore() {
+	    List<Player> players = getAllPlayers();
+	    players.sort((p1, p2) -> Integer.compare(p2.getTotalScoreWithWeighting(), p1.getTotalScoreWithWeighting()));
+	    StringBuilder report = new StringBuilder();
+
+	    // Header
+	    report.append("Player ID\tName\tWeighted Score\n");
+
+	    // Data rows
+	    for (Player player : players) {
+	        int weightedScore = player.getTotalScoreWithWeighting();
+	        report.append(player.getUserID()).append("\t")
+	              .append(player.getName()).append("\t")
+	              .append(weightedScore).append("\n");
+	    }
+	    return report.toString();
+	}
+
+	private String generateReportSortedByAmountOfMatches() {
+	    List<Player> players = getAllPlayers();
+	    players.sort((p1, p2) -> Integer.compare(p2.getMatchOutcomes().size(), p1.getMatchOutcomes().size()));
+	    StringBuilder report = new StringBuilder();
+
+	    // Header
+	    report.append("Player ID\tName\tAmount of Matches\n");
+
+	    // Data rows
+	    for (Player player : players) {
+	        int numberOfMatches = player.getMatchOutcomes().size();
+	        report.append(player.getUserID()).append("\t")
+	              .append(player.getName()).append("\t")
+	              .append(numberOfMatches).append("\n");
+	    }
+	    return report.toString();
+	}
 	private void displayReport(String reportTitle, String reportContent) {
-	    JTextArea textArea = new JTextArea(20, 40);
+	    // Increase the size of JTextArea for a larger display
+	    JTextArea textArea = new JTextArea(30, 50); // Increased rows and columns
 	    textArea.setText(reportContent);
 	    textArea.setEditable(false);
 	    JScrollPane scrollPane = new JScrollPane(textArea);
 
 	    JFrame reportFrame = new JFrame(reportTitle);
 	    reportFrame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+
+	    // size for the JFrame
+	    reportFrame.setPreferredSize(new Dimension(1000, 600)); 
 	    reportFrame.pack();
 	    reportFrame.setLocationRelativeTo(frame);
 	    reportFrame.setVisible(true);
 	}
+
 
 	
 	

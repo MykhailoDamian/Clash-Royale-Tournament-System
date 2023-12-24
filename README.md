@@ -50,6 +50,8 @@ The player can see his personal details and match statistics.
 <img width="628" alt="image" src="https://github.com/MykhailoDamian/Clash-Royale-Tournament-System/assets/154601293/a6613d18-7a1a-4e03-b4f5-0874c3d4aaf9">
 
 #### Report Sorted By Amount of Matches
+<img width="627" alt="image" src="https://github.com/MykhailoDamian/Clash-Royale-Tournament-System/assets/154601293/5e2c6564-7cdc-460e-909b-cf386b5b62b5">
+
 
 
 ## How Weighting Works?

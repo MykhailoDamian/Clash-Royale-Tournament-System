@@ -22,6 +22,9 @@ public class Player {
         this.scores = scores;
         this.matchOutcomes = new HashMap<>();
     }
+    public Map<String, Match> getMatchOutcomes() {
+        return matchOutcomes;
+    }
     public int getTotalScore() {
         return Arrays.stream(scores).sum();
     }
@@ -37,13 +40,18 @@ public class Player {
                 } else {
                     total += scores[i];
                 }
+                // Debugging statement
+                System.out.println("Match: " + matchID + ", Score: " + scores[i] + ", Weighted Score: " + total);
             }
         }
         return total;
+        
     }
     // Add a match outcome to the player
     public void addMatchOutcome(String matchID, Match match) {
         this.matchOutcomes.put(matchID, match);
+     // Debugging statement
+        System.out.println("Added match outcome: " + matchID + " - Result: " + match.getResult() + ", Score: " + match.getScore());
     }
 
     // Calculate the overall score based on match outcomes and scores
@@ -60,6 +68,7 @@ public class Player {
                 } else {
                     total += scores[i];
                 }
+                System.out.println("Overall Score for " + userID + ": " + total);
             }
         }
         return scores.length > 0 ? total / scores.length : 0; // Average score

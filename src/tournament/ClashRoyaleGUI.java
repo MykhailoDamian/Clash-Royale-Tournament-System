@@ -33,7 +33,8 @@ public class ClashRoyaleGUI {
         showLoginPanel();
         frame.setVisible(true);
     }
-
+    private JComboBox<String> playerSelectDropdown; 
+    
     private void logout() {
         loggedInUserID = null;
         showLoginPanel();
@@ -113,6 +114,7 @@ public class ClashRoyaleGUI {
     }
 
     private void showPlayerScreen(Player player) {
+    	
         JPanel playerPanel = new JPanel();
         playerPanel.setLayout(null);
         frame.getContentPane().removeAll();
@@ -128,6 +130,8 @@ public class ClashRoyaleGUI {
         welcomeLabel.setBounds((frame.getWidth() - 200) / 2, 80, 200, 20);
         welcomeLabel.setHorizontalAlignment(JLabel.CENTER);
         playerPanel.add(welcomeLabel);
+        
+        
 
         scoreTable = new JTable(new DefaultTableModel(new Object[]{"MatchID", "Score", "Result"}, 0)) {
             @Override
@@ -268,6 +272,7 @@ public class ClashRoyaleGUI {
         }
     }
 
+
     private Player fetchPlayerDetails(String userID) {
         String filePath = "RunCompetitor.csv";
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
@@ -320,6 +325,9 @@ public class ClashRoyaleGUI {
         staffPanel.add(welcomeLabel);
         
         addCreateMatchSection(staffPanel);
+        addPlayerDetailViewSection(staffPanel);
+
+        
         
         JLabel titleLabel = new JLabel("Create Match");
         titleLabel.setBounds(10, 100, 100, 25);
@@ -351,7 +359,28 @@ public class ClashRoyaleGUI {
         addMatchButton.setBounds(460, 130, 100, 25);
         staffPanel.add(addMatchButton);
         addMatchButton.addActionListener(e -> addMatch(player1Dropdown, player2Dropdown, points1Field, points2Field, resultDropdown));
+        
+        JButton deletePlayerButton = new JButton("Delete Player");
+        deletePlayerButton.setBounds(360, 300, 120, 25);
+        staffPanel.add(deletePlayerButton);
+        deletePlayerButton.addActionListener(e -> deletePlayer((String) playerSelectDropdown.getSelectedItem()));
 
+        JButton detailedReportButton = new JButton("Generate Detailed Report");
+        detailedReportButton.setBounds(10, 350, 300, 25);
+        detailedReportButton.addActionListener(e -> displayReport("Detailed Report", generateDetailedReport()));
+        staffPanel.add(detailedReportButton);
+
+        JButton totalPointsReportButton = new JButton("Generate Report Sorted by Total Points");
+        totalPointsReportButton.setBounds(10, 380, 300, 25);
+        totalPointsReportButton.addActionListener(e -> displayReport("Report Sorted by Total Points", generateReportSortedByTotalPoints()));
+        staffPanel.add(totalPointsReportButton);
+
+        JButton mostWinsReportButton = new JButton("Generate Report Sorted by Most Wins");
+        mostWinsReportButton.setBounds(10, 410, 300, 25);
+        mostWinsReportButton.addActionListener(e -> displayReport("Report Sorted by Most Wins", generateReportSortedByMostWins()));
+        staffPanel.add(mostWinsReportButton);
+
+        
         // Logout button
         JButton logoutButton = new JButton("Logout");
         logoutButton.setBounds((frame.getWidth() - 100) / 2, 550, 100, 25); // Adjust as needed
@@ -361,6 +390,63 @@ public class ClashRoyaleGUI {
         frame.revalidate();
         frame.repaint();
     }
+    
+    private void deletePlayer(String playerID) {
+        int response = JOptionPane.showConfirmDialog(
+            frame,
+            "Are you sure you want to delete this player permanently?",
+            "Delete Player",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE
+        );
+        
+
+        if (response == JOptionPane.YES_OPTION) {
+            if (removePlayerFromDatabase(playerID)) {
+                JOptionPane.showMessageDialog(frame, "Player deleted successfully.");
+            } else {
+                JOptionPane.showMessageDialog(frame, "Error deleting player.");
+            }
+        }
+    }
+    
+    
+    private boolean removePlayerFromDatabase(String playerID) {
+        List<String> lines = new ArrayList<>();
+        boolean playerFound = false;
+        String filePath = "RunCompetitor.csv";
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                if (!values[0].equals(playerID)) {
+                    lines.add(line);
+                } else {
+                    playerFound = true;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        if (playerFound) {
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath))) {
+                for (String line : lines) {
+                    bw.write(line);
+                    bw.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+
     private void addCreateMatchSection(JPanel panel) {
         JLabel titleLabel = new JLabel("Create Match");
         titleLabel.setBounds(10, 100, 100, 25);
@@ -499,8 +585,169 @@ public class ClashRoyaleGUI {
     private String appendNewScore(String line, int newScore) {
         return line + "," + newScore;
     }
+    
+    
+    private void addPlayerDetailViewSection(JPanel panel) {
+        JLabel selectPlayerLabel = new JLabel("Select Player:");
+        selectPlayerLabel.setBounds(10, 300, 100, 25);
+        panel.add(selectPlayerLabel);
+
+        playerSelectDropdown = new JComboBox<>(getPlayerIDs()); // Initialize here
+        playerSelectDropdown.setBounds(120, 300, 100, 25);
+        panel.add(playerSelectDropdown);
+
+        JButton viewDetailsButton = new JButton("View Details");
+        viewDetailsButton.setBounds(230, 300, 120, 25);
+        panel.add(viewDetailsButton);
+        viewDetailsButton.addActionListener(e -> showSelectedPlayerDetails((String) playerSelectDropdown.getSelectedItem()));
+    }
 
 
+    private void showSelectedPlayerDetails(String selectedPlayerID) {
+    	
+        Player selectedPlayer = fetchPlayerDetails(selectedPlayerID);
+
+        if (selectedPlayer != null) {
+        	System.out.println("Match Outcomes for " + selectedPlayerID + ": " + selectedPlayer.getMatchOutcomes());
+
+            // Clearing the frame and setting up a new panel for player details
+            JPanel playerDetailsPanel = new JPanel();
+            playerDetailsPanel.setLayout(null);
+            frame.getContentPane().removeAll();
+            frame.getContentPane().add(playerDetailsPanel);
+
+            // Display player details (reuse displayPlayerDetails method)
+            displayPlayerDetails(playerDetailsPanel, selectedPlayer);
+
+            // Adjust y-position for match table to avoid overlapping
+            int yPosForMatchTable = calculatePositionForMatchTable();
+
+            // Create and add the match details table
+            addMatchDetailsTable(playerDetailsPanel, selectedPlayer, yPosForMatchTable);
+
+            // Back button to return to staff screen
+            JButton backButton = new JButton("Back");
+            backButton.setBounds((frame.getWidth() - 100) / 2, yPosForMatchTable + 210, 100, 25);
+            playerDetailsPanel.add(backButton);
+            backButton.addActionListener(e -> showTournamentStaffScreen());
+
+            frame.revalidate();
+            frame.repaint();
+        } else {
+            JOptionPane.showMessageDialog(frame, "Player details not found.");
+        }
+    }
+    
+
+	private int calculatePositionForMatchTable() {
+	    return 100; 
+	}
+	
+	private void addMatchDetailsTable(JPanel panel, Player player, int yPos) {
+	    JTable matchTable = new JTable(new DefaultTableModel(new Object[]{"MatchID", "Score", "Result"}, 0));
+	    DefaultTableModel model = (DefaultTableModel) matchTable.getModel();
+	    model.setRowCount(0); // Clear any existing data
+	
+	    // Add match data to the table
+	    player.getMatchOutcomes().forEach((matchID, match) -> {
+	        model.addRow(new Object[]{matchID, match.getScore(), match.getResult()});
+	    });
+	
+	    JScrollPane scrollPane = new JScrollPane(matchTable);
+	    scrollPane.setBounds(10, yPos, 760, 200); // Adjust the position based on yPos
+	    panel.add(scrollPane);
+	}
+
+
+//SORTINGS:
+	
+	private List<Player> getAllPlayers() {
+	    List<Player> players = new ArrayList<>();
+	    String filePath = "RunCompetitor.csv";
+	    try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+	        String line;
+	        while ((line = br.readLine()) != null) {
+	            String[] values = line.split(",");
+	            // Assuming the player data is structured in a specific format in CSV
+	            String userID = values[0];
+	            String name = values[1];
+	            int age = Integer.parseInt(values[2]);
+	            String country = values[3];
+	            String email = values[4];
+
+	            // Extracting and parsing the scores (assuming they start from the 6th element)
+	            int[] scores = Arrays.stream(Arrays.copyOfRange(values, 5, values.length))
+	                                 .mapToInt(Integer::parseInt)
+	                                 .toArray();
+
+	            Player player = new Player(userID, name, age, country, email, scores);
+	            players.add(player);
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	    return players;
+	}
+	// Method to generate a detailed report
+	private String generateDetailedReport() {
+	    List<Player> players = getAllPlayers();
+	    StringBuilder report = new StringBuilder();
+	    for (Player player : players) {
+	        report.append(player.getFullDetails()).append("\n");
+	    }
+	    return report.toString();
+	}
+
+	// Method to generate report sorted by total points
+	private String generateReportSortedByTotalPoints() {
+	    List<Player> players = getAllPlayers();
+	    players.sort((p1, p2) -> Integer.compare(p2.getTotalScore(), p1.getTotalScore()));
+	    StringBuilder report = new StringBuilder();
+	    for (Player player : players) {
+	        report.append(player.getFullDetails()).append("\n");
+	    }
+	    return report.toString();
+	}
+
+	// Method to generate report sorted by most wins
+	private String generateReportSortedByMostWins() {
+	    List<Player> players = getAllPlayers();
+	    players.sort((p1, p2) -> Integer.compare(countWins(p2), countWins(p1)));
+	    StringBuilder report = new StringBuilder();
+	    for (Player player : players) {
+	        report.append(player.getFullDetails()).append("\n");
+	    }
+	    return report.toString();
+	}
+
+	private int countWins(Player player) {
+	    int wins = 0;
+	    for (Match match : player.getMatchOutcomes().values()) {
+	        if ("Win".equals(match.getResult())) {
+	            wins++;
+	        }
+	    }
+	    return wins;
+	}
+
+	private void displayReport(String reportTitle, String reportContent) {
+	    JTextArea textArea = new JTextArea(20, 40);
+	    textArea.setText(reportContent);
+	    textArea.setEditable(false);
+	    JScrollPane scrollPane = new JScrollPane(textArea);
+
+	    JFrame reportFrame = new JFrame(reportTitle);
+	    reportFrame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+	    reportFrame.pack();
+	    reportFrame.setLocationRelativeTo(frame);
+	    reportFrame.setVisible(true);
+	}
+
+	
+	
+	
+	
+	
     public static void main(String[] args) {
         new ClashRoyaleGUI();
     }

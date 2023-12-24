@@ -36,14 +36,19 @@ The player can see his personal details and match statistics.
 
 #### Detailed Report 
 <img width="1003" alt="image" src="https://github.com/MykhailoDamian/Clash-Royale-Tournament-System/assets/154601293/9132aaee-8235-4971-a66b-fca74501bedd">
+
 #### Report Sorted By Total Points 
 <img width="728" alt="image" src="https://github.com/MykhailoDamian/Clash-Royale-Tournament-System/assets/154601293/9871abfb-78d4-4e4d-ab2e-618e29d0e0eb">
+
 #### Report Sorted By Total Wins
 <img width="647" alt="image" src="https://github.com/MykhailoDamian/Clash-Royale-Tournament-System/assets/154601293/8fa7c6d1-e037-4b49-bc6a-c0e73cf63146">
+
 #### Report Sorted By Average Score
 <img width="700" alt="image" src="https://github.com/MykhailoDamian/Clash-Royale-Tournament-System/assets/154601293/ab00a69f-237f-4786-aa56-e49bd5fe28ba">
+
 #### Report Sorted By Weighted Score
 <img width="628" alt="image" src="https://github.com/MykhailoDamian/Clash-Royale-Tournament-System/assets/154601293/a6613d18-7a1a-4e03-b4f5-0874c3d4aaf9">
+
 #### Report Sorted By Amount of Matches
 
 
